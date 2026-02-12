@@ -3,7 +3,7 @@
 
 // 覆盖原生的日期处理函数
 (function() {
-  console.log('时区修复补丁 v2.0 已加载');
+  console.log('时区修复补丁 v2.1 已加载 - 支持自动刷新');
   
   // 获取用户时区
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -35,7 +35,7 @@
       const [year, month, day] = productionDate.split('-').map(Number);
       
       // 使用本地时间
-      const prodDate = new Date(year, month - 1, day, 12, 0, 0); // 中午避免时区问题
+      const prodDate = new Date(year, month - 1, day, 12, 0, 0);
       const expiryDate = new Date(prodDate);
       expiryDate.setDate(prodDate.getDate() + shelfLife);
       
@@ -51,8 +51,7 @@
     }
   };
   
-  // === 新增：前端临期商品过滤器 ===
-  // 这个函数会覆盖后端的临期判断，使用本地时间重新计算
+  // 前端临期商品过滤器
   window.filterExpiringProducts = function(records) {
     if (!records || !Array.isArray(records)) return [];
     
@@ -70,7 +69,7 @@
         if (remaining <= reminderDays) {
           expiringProducts.push({
             ...record,
-            remaining_days: remaining, // 添加剩余天数到对象中
+            remaining_days: remaining,
             status: remaining <= 0 ? '已过期' : '临期'
           });
         }
@@ -88,7 +87,7 @@
     return expiringProducts;
   };
   
-  // === 新增：强制刷新临期列表 ===
+  // 强制刷新临期列表
   window.refreshExpiringWithLocalTime = async function() {
     console.log('🔄 使用本地时间刷新临期商品列表...');
     
@@ -109,15 +108,19 @@
       
       // 找到表格并渲染
       const expiringTable = document.getElementById('expiringTable');
-      if (!expiringTable) return;
+      if (!expiringTable) {
+        console.log('❌ 未找到临期商品表格');
+        return;
+      }
       
       // 清空表格
       expiringTable.innerHTML = '';
       
       if (expiringRecords.length === 0) {
         const row = document.createElement('tr');
-        row.innerHTML = '<td colspan="8" class="text-center py-4">暂无临期商品</td>';
+        row.innerHTML = '<td colspan="8" class="text-center py-4">🎉 暂无临期商品</td>';
         expiringTable.appendChild(row);
+        console.log('✅ 无临期商品');
         return;
       }
       
@@ -134,13 +137,17 @@
           statusText = '临期';
         }
         
+        // 计算到期日期
+        const expiryDate = new Date(record.production_date);
+        expiryDate.setDate(expiryDate.getDate() + record.shelf_life);
+        
         const row = document.createElement('tr');
         row.innerHTML = `
           <td class="table-cell">${record.sku}</td>
           <td class="product-name-cell">${record.name}</td>
           <td class="table-cell">${record.location || '默认位置'}</td>
-          <td class="table-cell">${record.production_date}</td>
-          <td class="table-cell">${window.formatDateLocal(new Date(record.production_date).getTime() + record.shelf_life * 24 * 60 * 60 * 1000)}</td>
+          <td class="table-cell date-cell">${record.production_date}</td>
+          <td class="table-cell date-cell">${window.formatDateLocal(expiryDate)}</td>
           <td class="table-cell">${remainingDaysVal > 0 ? remainingDaysVal + '天' : '已过期'}</td>
           <td class="table-cell ${statusClass}">${statusText}</td>
           <td class="table-cell">
@@ -153,6 +160,13 @@
       });
       
       console.log(`✅ 前端渲染完成，显示 ${expiringRecords.length} 条记录`);
+      
+      // 更新时区页脚时间
+      const footer = document.querySelector('.timezone-footer');
+      if (footer) {
+        footer.innerHTML = footer.innerHTML.replace(/上次刷新:.*$/, `上次刷新: ${new Date().toLocaleTimeString()}`);
+      }
+      
       return expiringRecords;
       
     } catch (error) {
@@ -160,39 +174,60 @@
     }
   };
   
-  // === 新增：替换原生的临期商品API调用 ===
-  // 在页面加载完成后挂载
+  // === 页面加载和登录状态监听 ===
   document.addEventListener('DOMContentLoaded', function() {
-    // 等待1秒后执行
     setTimeout(() => {
-      // 保存原始的 renderExpiringTable 函数
+      // 替换原生的 renderExpiringTable 函数
       if (typeof window.renderExpiringTable === 'function') {
-        const originalRenderExpiringTable = window.renderExpiringTable;
-        
-        // 替换为使用本地时间的版本
         window.renderExpiringTable = async function() {
           console.log('🔄 调用本地时间版本的 renderExpiringTable');
           return await window.refreshExpiringWithLocalTime();
         };
-        
         console.log('✅ 已替换 renderExpiringTable 为本地时间版本');
       }
+      
+      // 自动刷新临期商品
+      const mainApp = document.getElementById('main-app');
+      if (mainApp && !mainApp.classList.contains('d-none')) {
+        console.log('🔄 检测到已登录，自动刷新临期商品...');
+        setTimeout(() => {
+          window.refreshExpiringWithLocalTime();
+        }, 500);
+      }
+      
+      // 监听登录状态变化
+      const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          if (mutation.attributeName === 'class') {
+            const target = mutation.target;
+            if (target.id === 'main-app' && !target.classList.contains('d-none')) {
+              console.log('🔄 检测到登录成功，自动刷新临期商品...');
+              setTimeout(() => {
+                window.refreshExpiringWithLocalTime();
+              }, 800);
+            }
+          }
+        });
+      });
+      
+      const mainAppElement = document.getElementById('main-app');
+      if (mainAppElement) {
+        observer.observe(mainAppElement, { attributes: true });
+      }
+      
+      // 监听临期标签页点击
+      document.addEventListener('click', function(e) {
+        if (e.target.id === 'expiring-tab' || e.target.closest('#expiring-tab')) {
+          setTimeout(() => {
+            window.refreshExpiringWithLocalTime();
+          }, 200);
+        }
+      });
       
       // 显示时区信息
       const offsetHours = Math.abs(Math.floor(userOffset / 60));
       const offsetMinutes = Math.abs(userOffset % 60);
       const offsetSign = userOffset <= 0 ? '+' : '-';
-      
-      console.log(`用户时区: ${userTimezone} (UTC${offsetSign}${offsetHours}:${offsetMinutes})`);
-      
-      // 在页面底部添加时区信息
-      let footer = document.querySelector('.timezone-footer');
-      if (!footer) {
-        footer = document.createElement('div');
-        footer.className = 'timezone-footer';
-        footer.style.cssText = 'text-align:center;font-size:12px;color:#666;margin-top:20px;padding:10px;';
-        document.body.appendChild(footer);
-      }
       
       let timezoneDisplay = '';
       if (userTimezone === 'Asia/Shanghai' || userTimezone === 'China Standard Time') {
@@ -201,14 +236,18 @@
         timezoneDisplay = `${userTimezone} (UTC${offsetSign}${offsetHours.toString().padStart(2, '0')}:${offsetMinutes.toString().padStart(2, '0')})`;
       }
       
-      footer.innerHTML = `时区: ${timezoneDisplay} | 临期判断基于本地时间`;
+      // 添加时区页脚
+      let footer = document.querySelector('.timezone-footer');
+      if (!footer) {
+        footer = document.createElement('div');
+        footer.className = 'timezone-footer';
+        footer.style.cssText = 'text-align:center;font-size:12px;color:#666;margin-top:20px;padding:10px;';
+        document.body.appendChild(footer);
+      }
+      
+      footer.innerHTML = `时区: ${timezoneDisplay} | 临期判断基于本地时间 | 上次刷新: ${new Date().toLocaleTimeString()}`;
       
     }, 1000);
   });
-  
-  // === 新增：手动刷新临期列表的全局函数 ===
-  window.manualRefreshExpiring = function() {
-    return window.refreshExpiringWithLocalTime();
-  };
   
 })();
