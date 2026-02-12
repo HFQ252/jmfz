@@ -107,14 +107,7 @@
             overflow-wrap: break-word;
         }
         
-        .table-cell {
-            max-width: 150px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        
-        /* 商品名称换行样式 - 固定6个中文字宽度后换行 */
+        /* 商品名称换行样式 */
         .product-name-cell {
             max-width: 120px;
             min-width: 100px;
@@ -124,8 +117,13 @@
             padding: 8px 4px !important;
         }
         
-        /* ===== 新增：日期列宽度修复 ===== */
-        /* 日期列最小宽度，确保完整显示 yyyy-mm-dd */
+        /* ===== 表格列宽度定义 ===== */
+        .sku-cell {
+            min-width: 70px;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+        
         .date-cell {
             min-width: 110px !important;
             white-space: nowrap !important;
@@ -133,63 +131,35 @@
             letter-spacing: 0.5px;
         }
         
+        .location-cell {
+            min-width: 100px;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+        
+        .days-cell {
+            min-width: 60px;
+            white-space: nowrap;
+            text-align: center;
+        }
+        
+        .status-cell {
+            min-width: 60px;
+            white-space: nowrap;
+            text-align: center;
+        }
+        
+        .action-cell {
+            min-width: 80px;
+            white-space: nowrap;
+            text-align: center;
+        }
+        
         /* 表格容器优化 */
         .table-responsive {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             margin-bottom: 0;
-        }
-        
-        /* 表格最小宽度，防止列挤压 */
-        .expiring-table,
-        .all-table {
-            min-width: 1000px !important;
-        }
-        
-        @media (max-width: 768px) {
-            .login-wrapper {
-                max-width: 100%;
-                margin: 20px auto;
-                padding: 15px;
-            }
-            
-            .table-cell {
-                max-width: 80px;
-                font-size: 0.85rem;
-            }
-            
-            .product-name-cell {
-                max-width: 90px;
-                font-size: 0.85rem;
-                padding: 6px 4px !important;
-            }
-            
-            /* 移动端日期列保持宽度 */
-            .date-cell {
-                min-width: 100px !important;
-                font-size: 0.85rem;
-            }
-            
-            .btn-sm {
-                padding: 0.2rem 0.4rem;
-                font-size: 0.75rem;
-            }
-            
-            .modal-dialog {
-                margin: 0.5rem;
-            }
-            
-            /* 移动端表格滚动提示 */
-            .table-responsive::after {
-                content: '← 左右滑动查看更多 →';
-                display: block;
-                text-align: center;
-                font-size: 0.75rem;
-                color: #6c757d;
-                padding: 5px;
-                background: #f8f9fa;
-                border-bottom: 1px solid #dee2e6;
-            }
         }
         
         /* 状态指示器 */
@@ -244,6 +214,189 @@
         /* 登录注册切换动画 */
         .tab-pane {
             transition: opacity 0.15s ease;
+        }
+        
+        /* ===== 移动端卡片布局 - 彻底解决滑动问题 ===== */
+        @media (max-width: 768px) {
+            .login-wrapper {
+                max-width: 100%;
+                margin: 20px auto;
+                padding: 15px;
+            }
+            
+            /* 隐藏PC表格，显示移动卡片 */
+            .desktop-table {
+                display: none !important;
+            }
+            
+            .mobile-cards {
+                display: block !important;
+            }
+            
+            /* 临期商品卡片 */
+            .expiring-card {
+                background: white;
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 12px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+                border-left: 6px solid;
+                transition: all 0.2s ease;
+            }
+            
+            .expiring-card.warning {
+                border-left-color: #ffc107;
+            }
+            
+            .expiring-card.danger {
+                border-left-color: #dc3545;
+            }
+            
+            /* 卡片头部 - SKU和状态 */
+            .card-header-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 12px;
+            }
+            
+            .card-sku {
+                font-size: 1.1rem;
+                font-weight: 700;
+                color: #333;
+                background: #f8f9fa;
+                padding: 4px 10px;
+                border-radius: 20px;
+            }
+            
+            .card-status {
+                font-size: 0.85rem;
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-weight: 600;
+            }
+            
+            .status-warning-bg {
+                background: #fff3cd;
+                color: #856404;
+            }
+            
+            .status-danger-bg {
+                background: #f8d7da;
+                color: #721c24;
+            }
+            
+            /* 卡片主体 - 网格布局 */
+            .card-body-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+            
+            .card-info-item {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .card-info-label {
+                font-size: 0.7rem;
+                color: #6c757d;
+                margin-bottom: 2px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
+            .card-info-value {
+                font-size: 0.95rem;
+                font-weight: 600;
+                color: #212529;
+                word-break: break-word;
+            }
+            
+            /* 库位 - 突出显示 */
+            .location-value {
+                font-size: 1rem;
+                font-weight: 700;
+                color: #0d6efd;
+                background: #e7f1ff;
+                padding: 4px 8px;
+                border-radius: 6px;
+                display: inline-block;
+            }
+            
+            /* 商品名称 - 完整显示 */
+            .name-value {
+                font-size: 1rem;
+                font-weight: 600;
+                line-height: 1.3;
+            }
+            
+            /* 日期显示 */
+            .date-value {
+                font-family: 'Consolas', monospace;
+                font-size: 0.9rem;
+            }
+            
+            /* 剩余天数 - 大数字 */
+            .days-value {
+                font-size: 1.2rem;
+                font-weight: 700;
+            }
+            
+            .days-unit {
+                font-size: 0.8rem;
+                color: #6c757d;
+                margin-left: 2px;
+            }
+            
+            /* 卡片底部 - 操作按钮 */
+            .card-footer-row {
+                display: flex;
+                justify-content: flex-end;
+                border-top: 1px solid #dee2e6;
+                padding-top: 12px;
+            }
+            
+            .btn-delete-card {
+                background: #dc3545;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-size: 0.95rem;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .btn-delete-card i {
+                font-size: 1.1rem;
+            }
+            
+            /* 移动端按钮优化 */
+            .btn-sm {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.75rem;
+            }
+            
+            .modal-dialog {
+                margin: 0.5rem;
+            }
+        }
+        
+        /* PC端隐藏移动卡片 */
+        @media (min-width: 769px) {
+            .mobile-cards {
+                display: none !important;
+            }
+            
+            .desktop-table {
+                display: table !important;
+            }
         }
     </style>
 </head>
@@ -320,13 +473,6 @@
                             <input type="password" class="form-control" id="registerConfirmPassword" 
                                    placeholder="再次输入密码">
                         </div>
-                        <!-- <div class="mb-3">
-                            <label for="registerEmail" class="form-label">
-                                <i class="bi bi-envelope"></i> 邮箱（可选）
-                            </label>
-                            <input type="email" class="form-control" id="registerEmail" 
-                                   placeholder="example@email.com">
-                        </div> -->
                         <div class="d-grid gap-2">
                             <button class="btn btn-success btn-lg" id="registerBtn">
                                 <i class="bi bi-person-plus"></i> 注册
@@ -340,7 +486,7 @@
         <div class="login-footer">
             <div class="alert alert-info mb-0">
                 <i class="bi bi-info-circle"></i>
-                <strong>密码无法找回</strong><strong>!!!</strong> <strong>请牢记自己的密码</strong>
+                <strong>密码无法找回！请牢记自己的密码</strong>
             </div>
             <small class="d-block mt-3 text-muted">
                 <i class="bi bi-shield-lock"></i> 您的数据将安全存储在Zeabur服务器
@@ -480,7 +626,7 @@
                     </div>
                 </div>
                 
-                <!-- ===== 修复：临期商品标签页 - 日期列宽度修复 ===== -->
+                <!-- ===== 临期商品标签页 - 双布局 ===== -->
                 <div class="tab-pane fade" id="expiring" role="tabpanel">
                     <div class="card">
                         <div class="card-header bg-warning text-white py-2">
@@ -490,34 +636,40 @@
                             </button>
                         </div>
                         <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-striped table-hover mb-0 expiring-table" style="min-width: 1000px;">
+                            <!-- PC端 - 表格布局 -->
+                            <div class="table-responsive desktop-table">
+                                <table class="table table-striped table-hover mb-0">
                                     <thead class="table-warning">
                                         <tr>
-                                            <th style="width: 8%; min-width: 70px;">SKU</th>
-                                            <th style="width: 15%; min-width: 100px;" class="product-name-cell">商品名称</th>
-                                            <th style="width: 10%; min-width: 80px;">库位</th>
-                                            <th style="width: 12%; min-width: 110px;" class="date-cell">生产日期</th>
-                                            <th style="width: 12%; min-width: 110px;" class="date-cell">到期日期</th>
-                                            <th style="width: 8%; min-width: 70px;">剩余天数</th>
-                                            <th style="width: 8%; min-width: 70px;">状态</th>
-                                            <th style="width: 15%; min-width: 100px;">操作</th>
+                                            <th class="sku-cell">SKU</th>
+                                            <th class="product-name-cell">商品名称</th>
+                                            <th class="location-cell">库位</th>
+                                            <th class="date-cell">生产日期</th>
+                                            <th class="date-cell">到期日期</th>
+                                            <th class="days-cell">剩余</th>
+                                            <th class="status-cell">状态</th>
+                                            <th class="action-cell">操作</th>
                                         </tr>
                                     </thead>
                                     <tbody id="expiringTable">
-                                        <!-- 数据将通过JavaScript动态加载 -->
+                                        <!-- PC端数据将通过JavaScript动态加载 -->
                                     </tbody>
                                 </table>
+                            </div>
+                            
+                            <!-- 移动端 - 卡片布局 -->
+                            <div class="mobile-cards" id="expiringCards">
+                                <!-- 卡片将通过JavaScript动态加载 -->
                             </div>
                         </div>
                     </div>
                     <div class="alert alert-warning mt-3 mb-0">
                         <i class="bi bi-exclamation-triangle me-1"></i>
-                        此列表显示已过期或即将过期的商品，请及时处理。
+                        此列表显示已过期或即将过期的商品，请根据<strong>库位信息</strong>及时下架处理。
                     </div>
                 </div>
                 
-                <!-- ===== 修复：所有商品标签页 - 日期列宽度修复 ===== -->
+                <!-- ===== 所有商品标签页 - 双布局 ===== -->
                 <div class="tab-pane fade" id="all" role="tabpanel">
                     <div class="card">
                         <div class="card-header bg-info text-white py-2">
@@ -528,24 +680,30 @@
                             </button>
                         </div>
                         <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-striped table-hover mb-0 all-table" style="min-width: 1000px;">
+                            <!-- PC端 - 表格布局 -->
+                            <div class="table-responsive desktop-table">
+                                <table class="table table-striped table-hover mb-0">
                                     <thead class="table-info">
                                         <tr>
-                                            <th style="width: 8%; min-width: 70px;">SKU</th>
-                                            <th style="width: 15%; min-width: 100px;" class="product-name-cell">商品名称</th>
-                                            <th style="width: 10%; min-width: 80px;">库位</th>
-                                            <th style="width: 12%; min-width: 110px;" class="date-cell">生产日期</th>
-                                            <th style="width: 12%; min-width: 110px;" class="date-cell">到期日期</th>
-                                            <th style="width: 8%; min-width: 70px;">剩余天数</th>
-                                            <th style="width: 8%; min-width: 70px;">状态</th>
-                                            <th style="width: 15%; min-width: 100px;">操作</th>
+                                            <th class="sku-cell">SKU</th>
+                                            <th class="product-name-cell">商品名称</th>
+                                            <th class="location-cell">库位</th>
+                                            <th class="date-cell">生产日期</th>
+                                            <th class="date-cell">到期日期</th>
+                                            <th class="days-cell">剩余</th>
+                                            <th class="status-cell">状态</th>
+                                            <th class="action-cell">操作</th>
                                         </tr>
                                     </thead>
                                     <tbody id="allTable">
-                                        <!-- 数据将通过JavaScript动态加载 -->
+                                        <!-- PC端数据将通过JavaScript动态加载 -->
                                     </tbody>
                                 </table>
+                            </div>
+                            
+                            <!-- 移动端 - 卡片布局 -->
+                            <div class="mobile-cards" id="allCards">
+                                <!-- 移动端卡片将通过JavaScript动态加载（如需此功能，需在quick_fix.js中添加） -->
                             </div>
                         </div>
                     </div>
@@ -637,12 +795,12 @@
                                 <table class="table table-striped table-hover mb-0">
                                     <thead>
                                         <tr>
-                                            <th class="table-cell">SKU</th>
+                                            <th class="sku-cell">SKU</th>
                                             <th class="product-name-cell">商品名称</th>
-                                            <th class="table-cell">保质期(天)</th>
-                                            <th class="table-cell">临期提醒(天)</th>
-                                            <th class="table-cell">库位</th>
-                                            <th class="table-cell">操作</th>
+                                            <th class="days-cell">保质期</th>
+                                            <th class="days-cell">提醒</th>
+                                            <th class="location-cell">库位</th>
+                                            <th class="action-cell">操作</th>
                                         </tr>
                                     </thead>
                                     <tbody id="productDatabaseTable">
@@ -657,7 +815,6 @@
         </div>
     </div>
     
-    <!-- 模态框 -->
     <!-- 删除确认模态框 -->
     <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
