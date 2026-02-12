@@ -215,6 +215,7 @@ async function login() {
 async function register() {
   const username = document.getElementById('registerUsername').value.trim();
   const password = document.getElementById('registerPassword').value.trim();
+  const confirmPassword = document.getElementById('registerConfirmPassword').value.trim();
   const email = document.getElementById('registerEmail').value.trim();
   
   if (!username || !password) {
@@ -229,6 +230,12 @@ async function register() {
   
   if (password.length < 6) {
     showAlert('密码长度不能少于6位', 'warning');
+    return;
+  }
+  
+  // 新增：确认密码验证
+  if (password !== confirmPassword) {
+    showAlert('两次输入的密码不一致', 'warning');
     return;
   }
   
@@ -247,10 +254,16 @@ async function register() {
     
     showAlert('注册成功，请登录', 'success');
     
+    // 清空注册表单
     document.getElementById('registerUsername').value = '';
     document.getElementById('registerPassword').value = '';
+    document.getElementById('registerConfirmPassword').value = '';
     document.getElementById('registerEmail').value = '';
     
+    // 切换到登录标签页
+    document.getElementById('login-tab').click();
+    
+    // 填充用户名到登录框
     document.getElementById('loginUsername').value = username;
     document.getElementById('loginPassword').value = '';
     document.getElementById('loginUsername').focus();
