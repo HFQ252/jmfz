@@ -7,34 +7,87 @@
     <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
     <style>
-        /* 新增多用户相关样式 */
-        .login-container {
-            max-width: 900px;
+        /* 登录页样式 */
+        .login-wrapper {
+            max-width: 450px;
             margin: 50px auto;
             padding: 20px;
         }
         
         .login-card {
-            height: 100%;
             border: none;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-        
-        .login-card:hover {
-            transform: translateY(-5px);
+            overflow: hidden;
         }
         
         .login-card .card-header {
-            border-radius: 15px 15px 0 0;
             padding: 20px;
-            font-size: 1.2rem;
-            font-weight: 600;
+            border-bottom: none;
         }
         
         .login-card .card-body {
             padding: 30px;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-header h1 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .login-header p {
+            color: #666;
+            font-size: 1rem;
+        }
+        
+        .nav-login-tabs {
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .nav-login-tabs .nav-link {
+            border: none;
+            color: #666;
+            font-size: 1.1rem;
+            padding: 12px 20px;
+            margin-right: 10px;
+            background: transparent;
+            position: relative;
+        }
+        
+        .nav-login-tabs .nav-link.active {
+            color: #0d6efd;
+            background: transparent;
+            font-weight: 600;
+        }
+        
+        .nav-login-tabs .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #0d6efd;
+            border-radius: 2px;
+        }
+        
+        .nav-login-tabs .nav-link i {
+            margin-right: 8px;
+        }
+        
+        .login-footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+            color: #666;
         }
         
         .user-info {
@@ -72,18 +125,10 @@
         }
         
         @media (max-width: 768px) {
-            .login-container {
+            .login-wrapper {
                 max-width: 100%;
                 margin: 20px auto;
                 padding: 15px;
-            }
-            
-            .login-card {
-                margin-bottom: 20px;
-            }
-            
-            .login-card .card-body {
-                padding: 20px;
             }
             
             .table-cell {
@@ -151,50 +196,44 @@
             padding: 0.375rem 0.75rem;
         }
         
-        /* 卡片标题图标 */
-        .card-header i {
-            margin-right: 8px;
-        }
-        
-        /* 登录页标题 */
-        .login-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        
-        .login-header h1 {
-            font-size: 2.5rem;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        
-        .login-header p {
-            color: #666;
-            font-size: 1.1rem;
-        }
-        
         /* 表格内换行优化 */
         .table td {
             vertical-align: middle;
         }
+        
+        /* 登录注册切换动画 */
+        .tab-pane {
+            transition: opacity 0.15s ease;
+        }
     </style>
 </head>
 <body>
-    <!-- 登录界面 - 卡片分开布局 -->
-    <div id="login-container" class="login-container">
+    <!-- 登录界面 - 标签页切换 -->
+    <div id="login-container" class="login-wrapper">
         <div class="login-header">
             <h1><i class="bi bi-shield-check text-primary"></i> 商品保质期管理系统</h1>
-            <p class="text-muted">请选择登录或注册账户</p>
+            <p class="text-muted">请登录或注册账户</p>
         </div>
         
-        <div class="row g-4">
-            <!-- 登录卡片 -->
-            <div class="col-md-6">
-                <div class="card login-card">
-                    <div class="card-header bg-primary text-white">
-                        <i class="bi bi-box-arrow-in-right"></i> 用户登录
-                    </div>
-                    <div class="card-body">
+        <div class="card login-card">
+            <div class="card-header bg-white">
+                <ul class="nav nav-login-tabs" id="loginTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login-pane" type="button" role="tab">
+                            <i class="bi bi-box-arrow-in-right"></i> 登录
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register-pane" type="button" role="tab">
+                            <i class="bi bi-person-plus"></i> 注册
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="loginTabContent">
+                    <!-- 登录面板 -->
+                    <div class="tab-pane fade show active" id="login-pane" role="tabpanel">
                         <div class="mb-4">
                             <label for="loginUsername" class="form-label">
                                 <i class="bi bi-person"></i> 用户名
@@ -215,23 +254,16 @@
                             </button>
                         </div>
                     </div>
-                </div>
-            </div>
-            
-            <!-- 注册卡片 -->
-            <div class="col-md-6">
-                <div class="card login-card">
-                    <div class="card-header bg-success text-white">
-                        <i class="bi bi-person-plus"></i> 新用户注册
-                    </div>
-                    <div class="card-body">
+                    
+                    <!-- 注册面板 -->
+                    <div class="tab-pane fade" id="register-pane" role="tabpanel">
                         <div class="mb-3">
                             <label for="registerUsername" class="form-label">
                                 <i class="bi bi-person"></i> 用户名
                             </label>
                             <input type="text" class="form-control" id="registerUsername" 
                                    placeholder="3-20位字符">
-                            <div class="form-text">3-20个字符</div>
+                            <div class="form-text">3-20个字符，不可重复</div>
                         </div>
                         <div class="mb-3">
                             <label for="registerPassword" class="form-label">
@@ -240,6 +272,13 @@
                             <input type="password" class="form-control" id="registerPassword" 
                                    placeholder="至少6位">
                             <div class="form-text">至少6个字符</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerConfirmPassword" class="form-label">
+                                <i class="bi bi-lock-fill"></i> 确认密码
+                            </label>
+                            <input type="password" class="form-control" id="registerConfirmPassword" 
+                                   placeholder="再次输入密码">
                         </div>
                         <!-- <div class="mb-3">
                             <label for="registerEmail" class="form-label">
@@ -258,9 +297,14 @@
             </div>
         </div>
         
-        <div class="alert alert-info mt-4 text-center">
-            <i class="bi bi-info-circle"></i>
-            <strong>密码无法找回</strong>请牢记您的密码
+        <div class="login-footer">
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle"></i>
+                <strong>密码无法找回</strong><strong>!!!</strong> <strong>请牢记自己的密码</strong>
+            </div>
+            <small class="d-block mt-3 text-muted">
+                <i class="bi bi-shield-lock"></i> 您的数据将安全存储在Zeabur服务器
+            </small>
         </div>
     </div>
     
@@ -396,7 +440,7 @@
                     </div>
                 </div>
                 
-                <!-- 临期商品标签页 - 修改商品名称列换行样式 -->
+                <!-- 临期商品标签页 -->
                 <div class="tab-pane fade" id="expiring" role="tabpanel">
                     <div class="card">
                         <div class="card-header bg-warning text-white py-2">
@@ -433,7 +477,7 @@
                     </div>
                 </div>
                 
-                <!-- 所有商品标签页 - 修改商品名称列换行样式 -->
+                <!-- 所有商品标签页 -->
                 <div class="tab-pane fade" id="all" role="tabpanel">
                     <div class="card">
                         <div class="card-header bg-info text-white py-2">
