@@ -213,11 +213,25 @@ async function login() {
 }
 
 async function register() {
-  const username = document.getElementById('registerUsername').value.trim();
-  const password = document.getElementById('registerPassword').value.trim();
-  const confirmPassword = document.getElementById('registerConfirmPassword').value.trim();
-  const email = document.getElementById('registerEmail').value.trim();
+  // 获取表单元素
+  const usernameInput = document.getElementById('registerUsername');
+  const passwordInput = document.getElementById('registerPassword');
+  const confirmInput = document.getElementById('registerConfirmPassword');
+  const emailInput = document.getElementById('registerEmail');
   
+  // 检查元素是否存在
+  if (!usernameInput || !passwordInput || !confirmInput) {
+    console.error('注册表单元素不存在');
+    showAlert('页面加载不完整，请刷新后重试', 'danger');
+    return;
+  }
+  
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value.trim();
+  const confirmPassword = confirmInput.value.trim();
+  const email = emailInput ? emailInput.value.trim() : '';
+  
+  // 表单验证
   if (!username || !password) {
     showAlert('用户名和密码不能为空', 'warning');
     return;
@@ -233,11 +247,20 @@ async function register() {
     return;
   }
   
-  // 新增：确认密码验证
   if (password !== confirmPassword) {
     showAlert('两次输入的密码不一致', 'warning');
+    // 清空密码框
+    passwordInput.value = '';
+    confirmInput.value = '';
+    passwordInput.focus();
     return;
   }
+  
+  // 显示加载状态
+  const registerBtn = document.getElementById('registerBtn');
+  const originalText = registerBtn.innerHTML;
+  registerBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 注册中...';
+  registerBtn.disabled = true;
   
   try {
     const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
@@ -252,27 +275,54 @@ async function register() {
       throw new Error(result.error || '注册失败');
     }
     
-    showAlert('注册成功，请登录', 'success');
+    showAlert('✅ 注册成功，请登录', 'success');
     
     // 清空注册表单
-    document.getElementById('registerUsername').value = '';
-    document.getElementById('registerPassword').value = '';
-    document.getElementById('registerConfirmPassword').value = '';
-    document.getElementById('registerEmail').value = '';
+    usernameInput.value = '';
+    passwordInput.value = '';
+    confirmInput.value = '';
+    if (emailInput) emailInput.value = '';
     
     // 切换到登录标签页
-    document.getElementById('login-tab').click();
+    const loginTab = document.getElementById('login-tab');
+    if (loginTab) {
+      loginTab.click();
+    }
     
     // 填充用户名到登录框
-    document.getElementById('loginUsername').value = username;
-    document.getElementById('loginPassword').value = '';
-    document.getElementById('loginUsername').focus();
+    const loginUsername = document.getElementById('loginUsername');
+    if (loginUsername) {
+      loginUsername.value = username;
+    }
+    
+    const loginPassword = document.getElementById('loginPassword');
+    if (loginPassword) {
+      loginPassword.value = '';
+    }
+    
+    // 聚焦到密码输入框
+    setTimeout(() => {
+      if (loginPassword) loginPassword.focus();
+    }, 100);
     
   } catch (error) {
-    showAlert(`注册失败: ${error.message}`, 'danger');
+    console.error('注册错误:', error);
+    
+    let errorMessage = error.message;
+    if (errorMessage.includes('用户名已存在')) {
+      errorMessage = '该用户名已被注册，请使用其他用户名';
+    } else if (errorMessage.includes('duplicate') || errorMessage.includes('UNIQUE')) {
+      errorMessage = '用户名已存在';
+    }
+    
+    showAlert(`❌ 注册失败: ${errorMessage}`, 'danger');
+    
+  } finally {
+    // 恢复按钮状态
+    registerBtn.innerHTML = originalText;
+    registerBtn.disabled = false;
   }
 }
-
 async function logout() {
   try {
     await fetch(`${API_BASE_URL}/api/auth/logout`, {
