@@ -282,4 +282,237 @@
         }, 1000);
     });
     
+})();// ========== 🚀 完整修复所有商品页显示 ==========
+(function fixAllProductsPage() {
+    console.log('🔧 正在修复所有商品页...');
+    
+    // 1. 所有商品页渲染函数
+    window.renderAllProductsWithLocalTime = async function() {
+        console.log('🔄 刷新所有商品列表...');
+        
+        try {
+            const response = await fetch(`${window.location.origin}/api/records`, {
+                credentials: 'include'
+            });
+            
+            if (!response.ok) throw new Error('获取数据失败');
+            
+            const records = await response.json();
+            
+            // 使用本地时间计算剩余天数
+            records.forEach(record => {
+                record.remaining_days = window.calculateRemainingDaysLocal(
+                    record.production_date, 
+                    record.shelf_life
+                );
+            });
+            
+            // 按剩余天数排序（从少到多）
+            records.sort((a, b) => (a.remaining_days || 0) - (b.remaining_days || 0));
+            
+            // 渲染PC表格
+            const allTable = document.getElementById('allTable');
+            if (allTable) {
+                allTable.innerHTML = '';
+                
+                if (records.length === 0) {
+                    allTable.innerHTML = '<tr><td colspan="8" class="text-center py-4">📦 暂无库存商品</td></tr>';
+                } else {
+                    records.forEach(record => {
+                        const remainingDaysVal = record.remaining_days;
+                        const reminderDays = parseInt(record.reminder_days) || 0;
+                        
+                        let statusClass, statusText;
+                        if (remainingDaysVal <= 0) {
+                            statusClass = 'text-danger';
+                            statusText = '已过期';
+                        } else if (remainingDaysVal <= reminderDays) {
+                            statusClass = 'text-warning';
+                            statusText = '临期';
+                        } else {
+                            statusClass = 'text-success';
+                            statusText = '正常';
+                        }
+                        
+                        const expiryDate = new Date(record.production_date);
+                        expiryDate.setDate(expiryDate.getDate() + record.shelf_life);
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="sku-cell">${record.sku}</td>
+                            <td class="product-name-cell">${record.name}</td>
+                            <td class="location-cell">${record.location || '默认位置'}</td>
+                            <td class="date-cell">${record.production_date}</td>
+                            <td class="date-cell">${window.formatDateLocal(expiryDate)}</td>
+                            <td class="days-cell">
+                                ${remainingDaysVal > 0 ? remainingDaysVal : '0'}天
+                                ${remainingDaysVal > 0 && remainingDaysVal <= reminderDays ? 
+                                    '<span class="badge bg-warning ms-1">临期</span>' : ''}
+                            </td>
+                            <td class="status-cell ${statusClass}">
+                                <span class="status-indicator ${statusClass.replace('text-', 'status-')}"></span>
+                                ${statusText}
+                            </td>
+                            <td class="action-cell">
+                                <button class="btn btn-sm btn-danger" onclick="showDeleteConfirm(${JSON.stringify(record).replace(/"/g, '&quot;')}, 'record')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        allTable.appendChild(row);
+                    });
+                }
+            }
+            
+            // 渲染移动卡片
+            const allCards = document.getElementById('allCards');
+            if (allCards) {
+                allCards.innerHTML = '';
+                
+                if (records.length === 0) {
+                    allCards.innerHTML = `
+                        <div class="text-center py-5">
+                            <i class="bi bi-box" style="font-size: 3rem; color: #6c757d;"></i>
+                            <p class="mt-3 text-muted">📦 暂无库存商品</p>
+                        </div>
+                    `;
+                } else {
+                    records.forEach(record => {
+                        const remainingDaysVal = record.remaining_days;
+                        const reminderDays = parseInt(record.reminder_days) || 0;
+                        
+                        let cardClass, statusText, statusBgClass;
+                        if (remainingDaysVal <= 0) {
+                            cardClass = 'danger';
+                            statusText = '已过期';
+                            statusBgClass = 'status-danger-bg';
+                        } else if (remainingDaysVal <= reminderDays) {
+                            cardClass = 'warning';
+                            statusText = '临期';
+                            statusBgClass = 'status-warning-bg';
+                        } else {
+                            cardClass = 'normal';
+                            statusText = '正常';
+                            statusBgClass = 'status-normal-bg';
+                        }
+                        
+                        const expiryDate = new Date(record.production_date);
+                        expiryDate.setDate(expiryDate.getDate() + record.shelf_life);
+                        const formattedExpiryDate = window.formatDateLocal(expiryDate);
+                        
+                        const card = document.createElement('div');
+                        card.className = `expiring-card ${cardClass}`;
+                        card.innerHTML = `
+                            <div class="card-header-row">
+                                <span class="card-sku">${record.sku}</span>
+                                <span class="card-status ${statusBgClass}">${statusText}</span>
+                            </div>
+                            
+                            <div style="margin-bottom: 12px;">
+                                <div class="card-info-label">商品名称</div>
+                                <div class="card-info-value name-value">${record.name}</div>
+                            </div>
+                            
+                            <div class="card-body-grid">
+                                <div class="card-info-item">
+                                    <div class="card-info-label">📍 库位</div>
+                                    <div class="card-info-value location-value">${record.location || '默认位置'}</div>
+                                </div>
+                                
+                                <div class="card-info-item">
+                                    <div class="card-info-label">⏳ 剩余</div>
+                                    <div class="card-info-value days-value">
+                                        ${remainingDaysVal > 0 ? remainingDaysVal : '0'}
+                                        <span class="days-unit">天</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="card-info-item">
+                                    <div class="card-info-label">📅 生产</div>
+                                    <div class="card-info-value date-value">${record.production_date}</div>
+                                </div>
+                                
+                                <div class="card-info-item">
+                                    <div class="card-info-label">⚠️ 到期</div>
+                                    <div class="card-info-value date-value">${formattedExpiryDate}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="card-footer-row">
+                                <button class="btn-delete-card" onclick="showDeleteConfirm(${JSON.stringify(record).replace(/"/g, '&quot;')}, 'record')">
+                                    <i class="bi bi-trash"></i> 下架此商品
+                                </button>
+                            </div>
+                        `;
+                        allCards.appendChild(card);
+                    });
+                }
+            }
+            
+            console.log(`✅ 所有商品渲染完成：${records.length} 条记录`);
+            return records;
+            
+        } catch (error) {
+            console.error('❌ 所有商品页渲染失败:', error);
+        }
+    };
+    
+    // 2. 替换原生的 renderAllTable
+    if (typeof window.renderAllTable === 'function') {
+        window.renderAllTable = window.renderAllProductsWithLocalTime;
+        console.log('✅ 已替换 renderAllTable');
+    }
+    
+    // 3. 修复刷新按钮
+    const fixRefreshButtons = () => {
+        document.querySelectorAll('.refresh-btn[data-table="all"]').forEach(btn => {
+            btn.replaceWith(btn.cloneNode(true)); // 移除旧事件
+        });
+        
+        document.querySelectorAll('.refresh-btn[data-table="all"]').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.renderAllProductsWithLocalTime();
+                window.showAlert?.('所有商品列表已刷新', 'info');
+            });
+        });
+        console.log('✅ 已修复所有商品页刷新按钮');
+    };
+    
+    // 4. 修复 Ctrl+R 快捷键
+    const fixKeyboardShortcut = () => {
+
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                const activeTab = document.querySelector('.nav-link.active')?.id;
+                
+                if (activeTab === 'all-tab') {
+                    window.renderAllProductsWithLocalTime();
+                    window.showAlert?.('所有商品列表已刷新', 'info');
+                }
+            }
+        });
+        console.log('✅ 已修复 Ctrl+R 快捷键');
+    };
+    
+    // 5. 监听所有商品标签页点击
+    document.addEventListener('click', (e) => {
+        if (e.target.id === 'all-tab' || e.target.closest('#all-tab')) {
+            setTimeout(() => window.renderAllProductsWithLocalTime(), 200);
+        }
+    });
+    
+    // 6. 初始化时执行
+    setTimeout(() => {
+        fixRefreshButtons();
+        fixKeyboardShortcut();
+        
+        const mainApp = document.getElementById('main-app');
+        if (mainApp && !mainApp.classList.contains('d-none')) {
+            setTimeout(() => window.renderAllProductsWithLocalTime(), 600);
+        }
+    }, 1500);
+    
+    console.log('✅ 所有商品页修复完成');
 })();
