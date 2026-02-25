@@ -339,6 +339,12 @@ async function logout() {
 
 // ========== 主应用初始化 ==========
 async function initMainApp() {
+      // ✅ 防止重复初始化
+    if (window._appInitialized) {
+        console.log('⏭️ 应用已初始化，跳过');
+        return;
+    }
+    window._appInitialized = true;
   // 设置生产日期限制（使用本地时间）
   const today = new Date();
   const minDate = new Date(today);
